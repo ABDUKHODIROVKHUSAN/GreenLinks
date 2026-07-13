@@ -39,6 +39,11 @@ export class SalesResolver {
     return this.salesService.getFeaturedProducts(limit ?? 8);
   }
 
+  @Query(() => [SaleProduct])
+  hourlySaleProducts(): Promise<SaleProduct[]> {
+    return this.salesService.getHourlySaleProducts();
+  }
+
   @Query(() => BallProductsResult)
   ballProducts(
     @Args('input', { nullable: true }) input?: BallProductsInput,

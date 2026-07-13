@@ -8,6 +8,7 @@ import {
   Routes,
   useNavigate,
   useParams,
+  useLocation,
 } from "react-router-dom";
 import { io, type Socket } from "socket.io-client";
 import type { TFunction } from "i18next";
@@ -15,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { normalizeLang } from "./i18n";
 import { useTheme } from "./theme-context";
 import { SiteNavDesktop, SiteNavMobileDrawer } from "./components/SiteNav";
+import { formatShopPrice } from "./utils/currency";
 import AboutPageView from "./pages/AboutPageView";
 import CompanyMarketingPageView from "./pages/CompanyMarketingPageView";
 import SupportPageView from "./pages/SupportPageView";
@@ -1184,8 +1186,6 @@ function TopNav({
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const isUzHeader = normalizeLang(i18n.language) === "uz";
-  const isKoHeader = normalizeLang(i18n.language) === "ko";
   const placeholder = searchPlaceholder ?? t("search.placeholderNav");
   const isAuthenticated = Boolean(readStoredToken());
   const [activePanel, setActivePanel] = useState<"wishlist" | "cart" | null>(
@@ -1427,11 +1427,11 @@ function TopNav({
               className="relative z-[45] hidden min-h-0 min-w-0 flex-1 items-stretch overflow-visible py-1 lg:flex lg:justify-center lg:px-1"
               aria-label="Primary"
             >
-              <SiteNavDesktop isUzHeader={isUzHeader} isKoHeader={isKoHeader} />
+              <SiteNavDesktop />
             </nav>
 
             <div
-              className={`hidden shrink-0 lg:mr-1 lg:block ${isUzHeader ? "w-[min(100%,16rem)] min-w-[12rem] max-w-[42vw] sm:w-[15rem] xl:w-[17rem] 2xl:w-[18rem]" : "w-[min(100%,14rem)] min-w-[10.5rem] max-w-[36vw] sm:w-[13.5rem] xl:w-[15rem] 2xl:w-[16rem]"}`}
+              className="hidden shrink-0 lg:mr-1 lg:block w-[min(100%,14rem)] min-w-[10.5rem] max-w-[36vw] sm:w-[13.5rem] xl:w-[15rem] 2xl:w-[16rem]"
             >
               <div className="relative lg:-translate-x-1">
                 <svg
@@ -1509,21 +1509,42 @@ function TopNav({
                   </svg>
                 )}
               </button>
-              <label className="sr-only" htmlFor="gl-lang-select">
-                {t("a11y.language")}
-              </label>
-              <select
-                id="gl-lang-select"
-                value={normalizeLang(i18n.language)}
-                onChange={(event) => {
-                  void i18n.changeLanguage(event.target.value);
-                }}
-                className="h-9 min-w-[6rem] w-max max-w-none rounded-md border border-[var(--gl-border)] bg-[var(--gl-input-bg)] px-2 text-xs font-medium leading-normal text-slate-700 outline-none dark:text-slate-300"
+              <div
+                className="inline-flex items-center gap-0.5 rounded-md border border-[var(--gl-border)] bg-[var(--gl-input-bg)] p-0.5"
+                role="group"
+                aria-label={t("a11y.language")}
               >
-                <option value="en">{t("lang.en")}</option>
-                <option value="ko">{t("lang.ko")}</option>
-                <option value="uz">{t("lang.uz")}</option>
-              </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void i18n.changeLanguage("en");
+                  }}
+                  className={`inline-flex h-8 w-9 items-center justify-center rounded text-base transition-all ${
+                    normalizeLang(i18n.language) === "en"
+                      ? "bg-[#22c55e]/20 ring-1 ring-[#22c55e]/50"
+                      : "opacity-70 hover:opacity-100"
+                  }`}
+                  aria-label={t("lang.en")}
+                  title={t("lang.en")}
+                >
+                  🇺🇸
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void i18n.changeLanguage("ko");
+                  }}
+                  className={`inline-flex h-8 w-9 items-center justify-center rounded text-base transition-all ${
+                    normalizeLang(i18n.language) === "ko"
+                      ? "bg-[#22c55e]/20 ring-1 ring-[#22c55e]/50"
+                      : "opacity-70 hover:opacity-100"
+                  }`}
+                  aria-label={t("lang.ko")}
+                  title={t("lang.ko")}
+                >
+                  🇰🇷
+                </button>
+              </div>
               {isAuthenticated ? (
                 <>
                   <button
@@ -1691,11 +1712,7 @@ function TopNav({
                 <Link
                   to="/auth"
                   title={t("nav.loginSignupFull")}
-                  className={`inline-flex items-center justify-center rounded-md border border-[var(--gl-border-soft)] bg-[var(--gl-surface)] px-3 py-2 text-center font-medium leading-snug text-slate-900 dark:text-slate-100 transition-all hover:bg-[var(--gl-raised)] ${
-                    isUzHeader
-                      ? "w-full min-w-0 max-w-[13.5rem] whitespace-normal break-words text-xs [overflow-wrap:anywhere] sm:max-w-[15rem] sm:text-sm lg:w-auto lg:max-w-[17rem] xl:max-w-[19rem]"
-                      : "max-w-[min(20rem,calc(100vw-7rem))] break-words text-xs [overflow-wrap:anywhere] sm:max-w-[min(22rem,calc(100vw-8rem))] sm:text-sm lg:max-w-[min(26rem,calc(100vw-12rem))]"
-                  }`}
+                  className="inline-flex items-center justify-center rounded-md border border-[var(--gl-border-soft)] bg-[var(--gl-surface)] px-3 py-2 text-center font-medium leading-snug text-slate-900 dark:text-slate-100 transition-all hover:bg-[var(--gl-raised)] max-w-[min(20rem,calc(100vw-7rem))] break-words text-xs [overflow-wrap:anywhere] sm:max-w-[min(22rem,calc(100vw-8rem))] sm:text-sm lg:max-w-[min(26rem,calc(100vw-12rem))]"
                 >
                   {t("nav.loginSignup")}
                 </Link>
@@ -2944,6 +2961,35 @@ async function fetchClubProducts(input?: {
   return { data: result.data.clubProducts };
 }
 
+async function fetchHourlySaleProducts(): Promise<{
+  data?: SaleItem[];
+  error?: string;
+}> {
+  const query = `
+    query HourlySaleProducts {
+      hourlySaleProducts {
+        id
+        category
+        saleGroup
+        brand
+        name
+        rating
+        reviewCount
+        salePrice
+        originalPrice
+        badge
+        imageUrl
+      }
+    }
+  `;
+
+  const result = await callGraphql<{ hourlySaleProducts: SaleItem[] }>(query, {});
+  if (result.error) {
+    return { error: result.error };
+  }
+  return { data: result.data?.hourlySaleProducts ?? [] };
+}
+
 async function fetchFeaturedProducts(
   limit = 8,
 ): Promise<{ data?: ClubItem[]; error?: string }> {
@@ -3422,19 +3468,13 @@ async function fetchNearbyGolfShopsWithRetry(
 
 function HomePage() {
   const { t } = useTranslation();
+  const location = useLocation();
   const isAuthenticated = Boolean(readStoredToken());
   const accountPath = isAuthenticated ? "/my-page" : "/auth";
-  const [featured, setFeatured] = useState<ClubItem[]>([]);
-  const [spotlightBall, setSpotlightBall] = useState<BallItem | null>(null);
-  const [spotlightBag, setSpotlightBag] = useState<BagItem | null>(null);
-  const [spotlightAccessory, setSpotlightAccessory] =
-    useState<AccessoryItem | null>(null);
+  const [hourlySaleProducts, setHourlySaleProducts] = useState<SaleItem[]>([]);
   const [totalProductCount, setTotalProductCount] = useState<number | null>(null);
   const [brandCount, setBrandCount] = useState<number | null>(null);
   const [homeSearch, setHomeSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState<
-    "all" | "clubs" | "balls" | "bags" | "accessories"
-  >("all");
 
   type TrustModalKey = "ship" | "pay" | "returns" | "support";
   const [trustModal, setTrustModal] = useState<TrustModalKey | null>(null);
@@ -3573,12 +3613,29 @@ function HomePage() {
   }, [golfShopModalOpen, t]);
 
   useEffect(() => {
-    fetchFeaturedProducts(8).then((result) => {
-      if (result.data) {
-        setFeatured(result.data);
-      }
-    });
+    const loadHourlySale = () => {
+      void fetchHourlySaleProducts().then((result) => {
+        if (result.data) {
+          setHourlySaleProducts(result.data);
+        }
+      });
+    };
+
+    loadHourlySale();
+    const intervalId = window.setInterval(loadHourlySale, 60 * 60 * 1000);
+    return () => window.clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    const hash = location.hash.slice(1);
+    if (hash === "home-support" || hash === "home-company") {
+      window.setTimeout(() => {
+        document
+          .getElementById(hash)
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
+    }
+  }, [location.hash]);
 
   useEffect(() => {
     Promise.all([
@@ -3600,108 +3657,15 @@ function HomePage() {
     });
   }, []);
 
-  useEffect(() => {
-    Promise.all([
-      fetchBallProducts({ page: 1, limit: 1, sort: "RATING_DESC" }),
-      fetchBagProducts({ page: 1, limit: 1, sort: "RATING_DESC" }),
-      fetchAccessoryProducts({ page: 1, limit: 1, sort: "RATING_DESC" }),
-    ]).then(([balls, bags, accessories]) => {
-      if (balls.data?.items?.[0]) setSpotlightBall(balls.data.items[0]);
-      if (bags.data?.items?.[0]) setSpotlightBag(bags.data.items[0]);
-      if (accessories.data?.items?.[0]) {
-        setSpotlightAccessory(accessories.data.items[0]);
-      }
-    });
-  }, []);
-
-  const homeProducts = useMemo(() => {
-    type HomeFeaturedRow = {
-      id: string;
-      brand: string;
-      name: string;
-      price: number;
-      originalPrice?: number;
-      rating: number;
-      reviewCount: number;
-      badge: string;
-      imageUrl?: string;
-      filter: "clubs" | "balls" | "bags" | "accessories";
-    };
-
-    const clubRows: HomeFeaturedRow[] = featured.slice(0, 3).map((item) => ({
-      id: item.id,
-      brand: item.brand,
-      name: item.name,
-      price: item.price ?? 0,
-      originalPrice: item.originalPrice,
-      rating: item.rating ?? 4.8,
-      reviewCount: item.reviewCount ?? 0,
-      badge: item.badge ?? "Best Seller",
-      imageUrl: item.imageUrl,
-      filter: "clubs",
-    }));
-
-    const extras: HomeFeaturedRow[] = [];
-    if (spotlightBall) {
-      extras.push({
-        id: spotlightBall.id,
-        brand: spotlightBall.brand,
-        name: spotlightBall.name,
-        price: spotlightBall.price ?? 0,
-        originalPrice: spotlightBall.originalPrice,
-        rating: spotlightBall.rating ?? 4.8,
-        reviewCount: spotlightBall.reviewCount ?? 0,
-        badge:
-          spotlightBall.badge != null ? String(spotlightBall.badge) : "Popular",
-        imageUrl: spotlightBall.imageUrl,
-        filter: "balls",
-      });
-    }
-    if (spotlightBag) {
-      extras.push({
-        id: spotlightBag.id,
-        brand: spotlightBag.brand,
-        name: spotlightBag.name,
-        price: spotlightBag.price ?? 0,
-        originalPrice: spotlightBag.originalPrice,
-        rating: spotlightBag.rating ?? 4.8,
-        reviewCount: spotlightBag.reviewCount ?? 0,
-        badge: spotlightBag.badge != null ? String(spotlightBag.badge) : "Sale",
-        imageUrl: spotlightBag.imageUrl,
-        filter: "bags",
-      });
-    }
-    if (spotlightAccessory) {
-      extras.push({
-        id: spotlightAccessory.id,
-        brand: spotlightAccessory.brand,
-        name: spotlightAccessory.name,
-        price: spotlightAccessory.price ?? 0,
-        originalPrice: spotlightAccessory.originalPrice,
-        rating: spotlightAccessory.rating ?? 4.8,
-        reviewCount: spotlightAccessory.reviewCount ?? 0,
-        badge:
-          spotlightAccessory.badge != null
-            ? String(spotlightAccessory.badge)
-            : "Popular",
-        imageUrl: spotlightAccessory.imageUrl,
-        filter: "accessories",
-      });
-    }
-
-    return [...clubRows, ...extras];
-  }, [featured, spotlightBall, spotlightBag, spotlightAccessory]);
-
-  const filteredFeatured = useMemo(() => {
+  const filteredHourlySale = useMemo(() => {
     const q = homeSearch.trim().toLowerCase();
-    return homeProducts.filter((item) => {
-      const matchesSearch =
-        !q || `${item.name} ${item.brand}`.toLowerCase().includes(q);
-      const matchesFilter =
-        activeFilter === "all" || item.filter === activeFilter;
-      return matchesSearch && matchesFilter;
-    });
-  }, [homeProducts, homeSearch, activeFilter]);
+    if (!q) return hourlySaleProducts;
+    return hourlySaleProducts.filter((item) =>
+      `${item.name} ${item.brand} ${item.category}`
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [hourlySaleProducts, homeSearch]);
 
   return (
     <div className="min-h-screen bg-[var(--gl-page)] text-slate-950 dark:text-slate-50">
@@ -4039,10 +4003,10 @@ function HomePage() {
             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
               <div>
                 <h2 className="text-3xl font-bold tracking-tight text-[var(--gl-heading)] sm:text-4xl">
-                  {t("home.featuredProducts")}
+                  {t("home.saleProducts")}
                 </h2>
                 <p className="mt-2 text-slate-600 dark:text-slate-400">
-                  {t("home.featuredSub")}
+                  {t("home.saleSub")}
                 </p>
               </div>
               <Link
@@ -4053,51 +4017,19 @@ function HomePage() {
               </Link>
             </div>
 
-            <div className="mt-8 flex gap-2 overflow-x-auto pb-2">
-              {(
-                [
-                  ["all", "home.filterAllProducts"],
-                  ["clubs", "nav.clubs"],
-                  ["balls", "nav.balls"],
-                  ["bags", "nav.bags"],
-                  ["accessories", "nav.accessories"],
-                ] as const
-              ).map(([value, labelKey]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() =>
-                    setActiveFilter(
-                      value as
-                        | "all"
-                        | "clubs"
-                        | "balls"
-                        | "bags"
-                        | "accessories",
-                    )
-                  }
-                  className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all ${
-                    activeFilter === value
-                      ? "bg-[#22c55e] text-[#062412]"
-                      : "bg-[var(--gl-surface)] text-slate-900 dark:text-slate-100 hover:text-slate-900 dark:hover:text-slate-100"
-                  }`}
-                >
-                  {t(labelKey)}
-                </button>
-              ))}
-            </div>
-
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {filteredFeatured.slice(0, 8).map((item) =>
+              {filteredHourlySale.slice(0, 4).map((item) =>
                 (() => {
                   const safeRating =
                     typeof item.rating === "number" ? item.rating : 0;
                   const safeReviewCount =
                     typeof item.reviewCount === "number" ? item.reviewCount : 0;
-                  const safePrice =
-                    typeof item.price === "number" ? item.price : 0;
-                  const hasOriginalPrice =
-                    typeof item.originalPrice === "number";
+                  const safeSalePrice =
+                    typeof item.salePrice === "number" ? item.salePrice : 0;
+                  const safeOriginalPrice =
+                    typeof item.originalPrice === "number"
+                      ? item.originalPrice
+                      : safeSalePrice;
                   return (
                     <article
                       key={item.id}
@@ -4115,7 +4047,7 @@ function HomePage() {
                               item.imageUrl ??
                               getProductImageUrl(
                                 item.name,
-                                `${item.filter} golf product`,
+                                `${item.saleGroup} golf product`,
                               )
                             }
                             alt={item.name}
@@ -4128,7 +4060,7 @@ function HomePage() {
                         </Link>
                         <div className="absolute left-3 top-3 z-10">
                           <span className="rounded-md bg-[#22c55e]/20 px-2 py-0.5 text-xs font-medium text-[var(--gl-accent-text)]">
-                            {item.badge}
+                            {item.badge ?? "Sale"}
                           </span>
                         </div>
                         <WishlistToggleButton
@@ -4146,10 +4078,8 @@ function HomePage() {
                                   brand: item.brand,
                                   name: item.name,
                                   imageUrl: item.imageUrl ?? undefined,
-                                  price: safePrice,
-                                  originalPrice: hasOriginalPrice
-                                    ? item.originalPrice
-                                    : undefined,
+                                  price: safeSalePrice,
+                                  originalPrice: safeOriginalPrice,
                                 },
                                 centerOfElement(event.currentTarget),
                               )
@@ -4175,11 +4105,11 @@ function HomePage() {
                         </p>
                         <div className="mt-3 flex items-center gap-2">
                           <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                            ${safePrice.toFixed(2)}
+                            {formatShopPrice(safeSalePrice)}
                           </span>
-                          {hasOriginalPrice ? (
+                          {safeOriginalPrice > safeSalePrice ? (
                             <span className="text-sm text-slate-500 line-through">
-                              ${item.originalPrice!.toFixed(2)}
+                              {formatShopPrice(safeOriginalPrice)}
                             </span>
                           ) : null}
                         </div>
@@ -4576,59 +4506,38 @@ function HomePage() {
               </div>
             ) : null}
 
-            <div className="relative overflow-hidden rounded-3xl bg-[#22c55e] p-8 sm:p-12 lg:p-16">
-              <div className="absolute inset-0 opacity-20">
-                <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-[#d7a422] blur-3xl" />
-                <div className="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-[#f3fff7] blur-3xl" />
-              </div>
-              <div className="relative grid items-center gap-8 lg:grid-cols-2">
-                <div>
-                  <h2 className="font-[family-name:var(--font-heading)] text-3xl font-bold tracking-tight text-[#062412] sm:text-4xl lg:text-5xl">
-                    {t("home.promoSpringTitle")}
-                  </h2>
-                  <p className="mt-4 text-lg text-[#0b3d22]/80">
-                    {t("home.promoSpringSub")}
-                  </p>
-                  <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                    <Link
-                      to="/sale"
-                      className="inline-flex items-center justify-center gap-2 rounded-md bg-[#f3fff7] px-6 py-2.5 text-sm font-medium text-[#062412] hover:bg-[#f3fff7]/90"
-                    >
-                      {t("home.promoShopSale")}
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="h-4 w-4"
-                        aria-hidden="true"
-                      >
-                        <path d="M5 12h14" />
-                        <path d="m12 5 7 7-7 7" />
-                      </svg>
-                    </Link>
-                    <Link
-                      to="/auth"
-                      className="inline-flex items-center justify-center rounded-md border border-[#062412]/30 px-6 py-2.5 text-sm font-medium text-[#062412] hover:bg-[#f3fff7]/20"
-                    >
-                      {t("home.promoJoinFree")}
-                    </Link>
-                  </div>
-                </div>
-                <div className="flex items-center justify-center">
-                  <div className="text-center">
-                    <span className="block font-[family-name:var(--font-heading)] text-7xl font-bold text-[#062412] sm:text-8xl lg:text-9xl">
-                      {t("home.promoPercent")}
-                    </span>
-                    <span className="mt-2 block text-xl font-medium uppercase tracking-wider text-[#0b3d22]/80">
-                      {t("home.promoOffSelected")}
-                    </span>
-                  </div>
-                </div>
-              </div>
+            <div
+              id="home-support"
+              className="scroll-mt-28 rounded-3xl border border-[var(--gl-border)] bg-[var(--gl-surface)] p-8 sm:p-12"
+            >
+              <h2 className="font-[family-name:var(--font-heading)] text-3xl font-bold tracking-tight text-[var(--gl-heading)] sm:text-4xl">
+                {t("home.landingSupportTitle")}
+              </h2>
+              <p className="mt-4 max-w-2xl text-lg text-slate-600 dark:text-slate-400">
+                {t("home.landingSupportSub")}
+              </p>
+              <ul className="mt-6 space-y-3 text-slate-700 dark:text-slate-300">
+                <li>{t("home.landingSupportContact")}</li>
+                <li>{t("home.landingSupportHours")}</li>
+                <li>{t("home.landingSupportReturns")}</li>
+              </ul>
+            </div>
+
+            <div
+              id="home-company"
+              className="mt-8 scroll-mt-28 rounded-3xl border border-[var(--gl-border)] bg-[var(--gl-surface)] p-8 sm:p-12"
+            >
+              <h2 className="font-[family-name:var(--font-heading)] text-3xl font-bold tracking-tight text-[var(--gl-heading)] sm:text-4xl">
+                {t("home.landingCompanyTitle")}
+              </h2>
+              <p className="mt-4 max-w-2xl text-lg text-slate-600 dark:text-slate-400">
+                {t("home.landingCompanySub")}
+              </p>
+              <ul className="mt-6 space-y-3 text-slate-700 dark:text-slate-300">
+                <li>{t("home.landingCompanyMission")}</li>
+                <li>{t("home.landingCompanyQuality")}</li>
+                <li>{t("home.landingCompanyCommunity")}</li>
+              </ul>
             </div>
           </div>
         </section>
@@ -4678,6 +4587,27 @@ function AuthPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[var(--gl-page)] px-4 py-8">
       <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl shadow-slate-900/60">
+        <Link
+          to="/"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition-colors hover:text-slate-200"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m12 19-7-7 7-7" />
+            <path d="M19 12H5" />
+          </svg>
+          Back to home
+        </Link>
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-xl font-semibold tracking-tight text-slate-50">
             GreenLinks Golf
@@ -6359,7 +6289,6 @@ function MyPage() {
                       >
                         <option value="en">{t("lang.en")}</option>
                         <option value="ko">{t("lang.ko")}</option>
-                        <option value="uz">{t("lang.uz")}</option>
                       </select>
                     </div>
                   </div>
@@ -6918,10 +6847,10 @@ function SalePage() {
                         </div>
                         <div className="mt-3 flex items-center gap-2">
                           <span className="text-lg font-bold text-rose-400">
-                            ${item.salePrice.toFixed(2)}
+                            {formatShopPrice(item.salePrice)}
                           </span>
                           <span className="text-sm text-slate-500 line-through">
-                            ${item.originalPrice.toFixed(2)}
+                            {formatShopPrice(item.originalPrice)}
                           </span>
                         </div>
                         <p className="mt-1 text-xs font-medium text-[var(--gl-accent-text)]">
@@ -7443,11 +7372,11 @@ function ClubsPage() {
                         </p>
                         <div className="mt-3 flex items-center gap-2">
                           <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                            ${safePrice.toFixed(2)}
+                            {formatShopPrice(safePrice)}
                           </span>
                           {hasOriginalPrice ? (
                             <span className="text-sm text-slate-500 line-through">
-                              ${item.originalPrice!.toFixed(2)}
+                              {formatShopPrice(item.originalPrice!)}
                             </span>
                           ) : null}
                         </div>
@@ -7986,11 +7915,11 @@ function BallsPage() {
                         </div>
                         <div className="mt-3 flex items-center gap-2">
                           <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                            ${safePrice.toFixed(2)}
+                            {formatShopPrice(safePrice)}
                           </span>
                           {hasOriginalPrice ? (
                             <span className="text-sm text-slate-500 line-through">
-                              ${item.originalPrice!.toFixed(2)}
+                              {formatShopPrice(item.originalPrice!)}
                             </span>
                           ) : null}
                         </div>
@@ -8526,11 +8455,11 @@ function BagsPage() {
                         </div>
                         <div className="mt-3 flex items-center gap-2">
                           <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                            ${safePrice.toFixed(2)}
+                            {formatShopPrice(safePrice)}
                           </span>
                           {hasOriginalPrice ? (
                             <span className="text-sm text-slate-500 line-through">
-                              ${item.originalPrice!.toFixed(2)}
+                              {formatShopPrice(item.originalPrice!)}
                             </span>
                           ) : null}
                         </div>
@@ -9063,11 +8992,11 @@ function ApparelPage() {
                         </div>
                         <div className="mt-3 flex items-center gap-2">
                           <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                            ${safePrice.toFixed(2)}
+                            {formatShopPrice(safePrice)}
                           </span>
                           {hasOriginalPrice ? (
                             <span className="text-sm text-slate-500 line-through">
-                              ${item.originalPrice!.toFixed(2)}
+                              {formatShopPrice(item.originalPrice!)}
                             </span>
                           ) : null}
                         </div>
@@ -9629,11 +9558,11 @@ function AccessoriesPage() {
                       </div>
                       <div className="mt-3 flex items-center gap-2">
                         <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                          ${item.price.toFixed(2)}
+                          {formatShopPrice(item.price)}
                         </span>
                         {typeof item.originalPrice === "number" ? (
                           <span className="text-sm text-slate-500 line-through">
-                            ${item.originalPrice.toFixed(2)}
+                            {formatShopPrice(item.originalPrice)}
                           </span>
                         ) : null}
                       </div>
@@ -10475,15 +10404,15 @@ function ProductDetailPage() {
                 </div>
                 <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
                   <span className="text-4xl font-bold tabular-nums tracking-tight text-[var(--gl-heading)] sm:text-[2.75rem]">
-                    ${product.price.toFixed(2)}
+                    {formatShopPrice(product.price)}
                   </span>
                   {onSale ? (
                     <>
                       <span className="text-lg text-slate-500 line-through tabular-nums">
-                        ${product.originalPrice!.toFixed(2)}
+                        {formatShopPrice(product.originalPrice!)}
                       </span>
                       <span className="text-sm font-semibold text-emerald-700 dark:text-[#86efac]">
-                        {t("product.youSave", { amount: saveAmount.toFixed(2) })}
+                        {t("product.youSave", { amount: formatShopPrice(saveAmount) })}
                       </span>
                     </>
                   ) : null}
@@ -13563,7 +13492,6 @@ function App() {
   return (
     <BrowserRouter>
       <AppRoutes />
-      <AiAssistantWidget />
       <ChatWidget />
     </BrowserRouter>
   );

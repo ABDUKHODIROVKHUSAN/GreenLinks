@@ -11,11 +11,12 @@ export type SiteNavGroup = {
   id: SiteNavGroupId;
   titleKey: string;
   links: SiteNavLink[];
+  /** Scroll target on the landing page (Support / Company tabs). */
+  homeScrollId?: string;
 };
 
 /**
  * Single source for primary header menus (Shop, Support, Company).
- * Paths mirror the footer intent; update here when adding real pages.
  */
 export const SITE_NAV_GROUPS: SiteNavGroup[] = [
   {
@@ -33,29 +34,13 @@ export const SITE_NAV_GROUPS: SiteNavGroup[] = [
   {
     id: "support",
     titleKey: "nav.primarySupport",
-    links: [
-      { labelKey: "nav.primarySupport", to: "/support" },
-      { labelKey: "footer.linkContact", to: "/support/contact" },
-      { labelKey: "footer.linkFaqs", to: "/support/faqs" },
-      { labelKey: "footer.linkShipping", to: "/support/shipping" },
-      { labelKey: "footer.linkReturns", to: "/support/returns" },
-      { labelKey: "footer.linkSizeGuide", to: "/support/size-guide" },
-      { labelKey: "footer.linkTrackOrder", to: "/support/track-order" },
-      { labelKey: "footer.privacy", to: "/support/privacy" },
-      { labelKey: "footer.terms", to: "/support/terms" },
-      { labelKey: "footer.cookies", to: "/support/cookies" },
-    ],
+    links: [],
+    homeScrollId: "home-support",
   },
   {
     id: "company",
     titleKey: "nav.primaryCompany",
-    links: [
-      { labelKey: "footer.linkAbout", to: "/about" },
-      { labelKey: "footer.linkCareers", to: "/careers" },
-      { labelKey: "footer.linkPress", to: "/press" },
-      { labelKey: "footer.linkBlog", to: "/blog" },
-      { labelKey: "footer.linkPartners", to: "/partners" },
-      { labelKey: "footer.linkAffiliates", to: "/affiliates" },
-    ],
+    links: [],
+    homeScrollId: "home-company",
   },
 ];

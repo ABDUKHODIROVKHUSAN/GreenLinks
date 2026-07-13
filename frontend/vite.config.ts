@@ -6,23 +6,23 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/graphql": {
-        target: "http://localhost:3000",
-        changeOrigin: true,
-      },
-      "/chat": {
-        target: "http://localhost:3000",
-        changeOrigin: true,
-        ws: true,
-      },
-      "/ai-chat": {
-        target: "http://localhost:3000",
-        changeOrigin: true,
-      },
-      "/admin/uploads": {
-        target: "http://localhost:3000",
-        changeOrigin: true,
-      },
-    },
+  "/graphql": {
+    target: "http://localhost:5000", 
+    changeOrigin: true,
+  },
+  "/chat": {
+    target: "http://localhost:5000",
+    changeOrigin: true,
+    ws: true,
+  },
+  "/ai-chat": {
+    target: "http://localhost:5000",
+    changeOrigin: true,
+  },
+  "/admin/uploads": {
+    target: "http://localhost:5000",
+    changeOrigin: true,
+  },
+},
   },
 });

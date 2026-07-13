@@ -24,6 +24,7 @@ async function bootstrap() {
   const port = parseInt(process.env.PORT ?? "3000", 10) || 3000;
   const allowOrigin = new Set<string>([
     "http://localhost:5173",
+    "http://localhost:3000",
     "http://127.0.0.1:5173",
     `http://localhost:${port}`,
     `http://127.0.0.1:${port}`,

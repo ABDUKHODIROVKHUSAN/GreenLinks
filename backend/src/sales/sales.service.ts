@@ -372,6 +372,56 @@ export class SalesService {
       .slice(0, limit);
   }
 
+  /** Deterministic hour bucket used to rotate featured sale picks. */
+  private getHourSeed(): number {
+    return Math.floor(Date.now() / (1000 * 60 * 60));
+  }
+
+  private seededShuffle<T>(items: T[], seed: number): T[] {
+    const arr = [...items];
+    let state = seed >>> 0;
+    const random = () => {
+      state = (state * 1664525 + 1013904223) >>> 0;
+      return state / 0xffffffff;
+    };
+    for (let i = arr.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  /**
+   * Picks four active catalog products as hourly sale highlights.
+   * Selection is stable for one hour, then rotates.
+   */
+  async getHourlySaleProducts(): Promise<SaleProduct[]> {
+    if (!this.catalogRepository) {
+      return [];
+    }
+    const allActive = await this.catalogRepository.find({
+      where: { isActive: true },
+      order: { createdAt: 'DESC' },
+    });
+    if (allActive.length === 0) {
+      return [];
+    }
+
+    const seed = this.getHourSeed();
+    const picked = this.seededShuffle(allActive, seed).slice(0, 4);
+
+    return picked.map((item, index) => {
+      const mapped = this.mapCatalogToSaleProduct(item);
+      if (mapped.salePrice >= mapped.originalPrice) {
+        const discountPct = 0.15 + ((seed + index) % 26) / 100;
+        mapped.salePrice =
+          Math.round(mapped.originalPrice * (1 - discountPct) * 100) / 100;
+      }
+      mapped.badge = mapped.badge ?? 'Sale';
+      return mapped;
+    });
+  }
+
   async getBallProducts(input?: BallProductsInput): Promise<BallProductsResult> {
     const page = input?.page ?? 1;
     const limit = input?.limit ?? 9;

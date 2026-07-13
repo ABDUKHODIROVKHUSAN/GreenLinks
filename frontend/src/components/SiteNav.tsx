@@ -1,18 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   SITE_NAV_GROUPS,
   type SiteNavGroupId,
 } from "../nav/site-nav";
 
-type SiteNavDesktopProps = {
-  isUzHeader: boolean;
-  isKoHeader: boolean;
-};
-
-export function SiteNavDesktop({ isUzHeader, isKoHeader }: SiteNavDesktopProps) {
+export function SiteNavDesktop() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState<SiteNavGroupId | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -36,22 +33,38 @@ export function SiteNavDesktop({ isUzHeader, isKoHeader }: SiteNavDesktopProps) 
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const triggerClass = `inline-flex items-center gap-1 shrink-0 whitespace-nowrap rounded-md px-2 py-1.5 font-semibold text-slate-700 transition-colors hover:bg-[var(--gl-hover)] hover:text-slate-950 dark:text-slate-300 dark:hover:bg-[var(--gl-hover)] dark:hover:text-white ${
-    isUzHeader ? "text-xs sm:text-sm" : "text-sm xl:text-base"
-  }`;
+  const triggerClass = `inline-flex items-center gap-1 shrink-0 whitespace-nowrap rounded-md px-2 py-1.5 font-semibold text-slate-700 transition-colors hover:bg-[var(--gl-hover)] hover:text-slate-950 dark:text-slate-300 dark:hover:bg-[var(--gl-hover)] dark:hover:text-white text-sm xl:text-base`;
+
+  const scrollToHomeSection = (sectionId: string) => {
+    setOpen(null);
+    if (location.pathname === "/") {
+      document
+        .getElementById(sectionId)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    void navigate(`/#${sectionId}`);
+  };
 
   return (
     <div
       ref={containerRef}
-      className={`mx-auto flex min-h-9 w-max max-w-none flex-nowrap items-center justify-start px-2 ${
-        isUzHeader
-          ? "gap-1 sm:gap-2 xl:gap-3"
-          : isKoHeader
-            ? "gap-2 sm:gap-3 xl:gap-4"
-            : "gap-2 sm:gap-3 xl:gap-4"
-      }`}
+      className={`mx-auto flex min-h-9 w-max max-w-none flex-nowrap items-center justify-start px-2 gap-2 sm:gap-3 xl:gap-4`}
     >
       {SITE_NAV_GROUPS.map((group) => {
+        if (group.homeScrollId) {
+          return (
+            <button
+              key={group.id}
+              type="button"
+              className={triggerClass}
+              onClick={() => scrollToHomeSection(group.homeScrollId!)}
+            >
+              {t(group.titleKey)}
+            </button>
+          );
+        }
+
         const isOpen = open === group.id;
         return (
           <div key={group.id} className="relative">
@@ -122,6 +135,8 @@ type SiteNavMobileDrawerProps = {
 
 export function SiteNavMobileDrawer({ open, onClose }: SiteNavMobileDrawerProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [expanded, setExpanded] = useState<SiteNavGroupId | null>("shop");
 
   useEffect(() => {
@@ -138,6 +153,17 @@ export function SiteNavMobileDrawer({ open, onClose }: SiteNavMobileDrawerProps)
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
+
+  const scrollToHomeSection = (sectionId: string) => {
+    onClose();
+    if (location.pathname === "/") {
+      document
+        .getElementById(sectionId)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    void navigate(`/#${sectionId}`);
+  };
 
   if (!open) return null;
 
@@ -185,6 +211,19 @@ export function SiteNavMobileDrawer({ open, onClose }: SiteNavMobileDrawerProps)
         </div>
         <nav className="flex-1 overflow-y-auto px-2 py-3" aria-label="Primary">
           {SITE_NAV_GROUPS.map((group) => {
+            if (group.homeScrollId) {
+              return (
+                <button
+                  key={group.id}
+                  type="button"
+                  className="mb-1 flex w-full items-center rounded-lg px-3 py-3 text-left font-semibold text-slate-900 dark:text-slate-100"
+                  onClick={() => scrollToHomeSection(group.homeScrollId!)}
+                >
+                  {t(group.titleKey)}
+                </button>
+              );
+            }
+
             const isExpanded = expanded === group.id;
             return (
               <div
